@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Závodní hra</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="hud">
+            <div class="hud-item">
+                <span class="label">Kolo:</span>
+                <span id="lap-count">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="label">Čas kola:</span>
+                <span id="lap-time">00:00.000</span>
+            </div>
+            <div class="hud-item">
+                <span class="label">Nejlepší:</span>
+                <span id="best-time">--:--.---</span>
+            </div>
+            <div class="hud-item">
+                <span class="label">Rychlost:</span>
+                <span id="speed">0</span> km/h
+            </div>
+        </div>
+        <div id="instructions">
+            <p><strong>Ovládání:</strong> W - plyn | S - brzda | A/D - zatáčení</p>
+        </div>
+        <div id="message" class="hidden"></div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
