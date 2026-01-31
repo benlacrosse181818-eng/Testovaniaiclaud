@@ -36,6 +36,16 @@ const car = {
     turnSpeed: 0.05
 };
 
+// Static car (obstacle)
+const staticCar = {
+    x: 500,
+    y: 250,
+    width: 40,
+    height: 20,
+    angle: Math.PI / 4, // slightly rotated
+    color: '#666666'
+};
+
 // Track definition - oval track with inner and outer boundaries
 const track = {
     centerX: 500,
@@ -44,9 +54,9 @@ const track = {
     outerRadiusY: 280,
     innerRadiusX: 250,
     innerRadiusY: 150,
-    trackColor: '#3a3a4a',
-    borderColor: '#ff4444',
-    grassColor: '#2d4a2d'
+    trackColor: '#555555',
+    borderColor: '#ffffff',
+    grassColor: '#1a1a1a'
 };
 
 // Checkpoint and timing
@@ -124,6 +134,16 @@ function checkCollision() {
     return false;
 }
 
+// Check collision with static car
+function checkStaticCarCollision() {
+    const dx = car.x - staticCar.x;
+    const dy = car.y - staticCar.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    // Simple circle collision (approximate)
+    const minDistance = (car.width + staticCar.width) / 2;
+    return distance < minDistance;
+}
+
 // Check if car passes through a line segment
 function crossesLine(lineX, lineY, lineWidth, lineHeight) {
     const corners = getCarCorners();
@@ -199,12 +219,18 @@ function updateCar() {
     car.x = newX;
     car.y = newY;
 
-    // Check collision
+    // Check collision with walls
     if (checkCollision()) {
-        // Revert position and bounce back
         car.x = oldX;
         car.y = oldY;
-        car.speed *= -0.6; // Reverse speed for bounce effect
+        car.speed *= -0.6;
+    }
+
+    // Check collision with static car
+    if (checkStaticCarCollision()) {
+        car.x = oldX;
+        car.y = oldY;
+        car.speed *= -0.6;
     }
 }
 
@@ -297,7 +323,7 @@ function drawTrack() {
     }
 
     // Draw checkpoint (subtle)
-    ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.fillRect(checkpoint.x, checkpoint.y, checkpoint.width, 5);
 }
 
@@ -308,19 +334,19 @@ function drawCar() {
     ctx.rotate(car.angle);
 
     // Car body
-    ctx.fillStyle = '#ff6600';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(-car.width / 2, -car.height / 2, car.width, car.height);
 
-    // Front indicator (lighter orange)
-    ctx.fillStyle = '#ffaa00';
+    // Front indicator (light gray)
+    ctx.fillStyle = '#cccccc';
     ctx.fillRect(car.width / 4, -car.height / 2, car.width / 4, car.height);
 
     // Windshield
-    ctx.fillStyle = '#88ccff';
+    ctx.fillStyle = '#888888';
     ctx.fillRect(car.width / 8, -car.height / 3, car.width / 5, car.height / 1.5);
 
     // Wheels
-    ctx.fillStyle = '#222';
+    ctx.fillStyle = '#000000';
     const wheelWidth = 6;
     const wheelHeight = 8;
     // Front wheels
@@ -329,6 +355,36 @@ function drawCar() {
     // Rear wheels
     ctx.fillRect(-car.width / 3, -car.height / 2 - 2, wheelWidth, wheelHeight);
     ctx.fillRect(-car.width / 3, car.height / 2 - wheelHeight + 2, wheelWidth, wheelHeight);
+
+    ctx.restore();
+}
+
+// Draw static car (obstacle)
+function drawStaticCar() {
+    ctx.save();
+    ctx.translate(staticCar.x, staticCar.y);
+    ctx.rotate(staticCar.angle);
+
+    // Car body
+    ctx.fillStyle = staticCar.color;
+    ctx.fillRect(-staticCar.width / 2, -staticCar.height / 2, staticCar.width, staticCar.height);
+
+    // Front indicator
+    ctx.fillStyle = '#888888';
+    ctx.fillRect(staticCar.width / 4, -staticCar.height / 2, staticCar.width / 4, staticCar.height);
+
+    // Windshield
+    ctx.fillStyle = '#444444';
+    ctx.fillRect(staticCar.width / 8, -staticCar.height / 3, staticCar.width / 5, staticCar.height / 1.5);
+
+    // Wheels
+    ctx.fillStyle = '#000000';
+    const wheelWidth = 6;
+    const wheelHeight = 8;
+    ctx.fillRect(staticCar.width / 4, -staticCar.height / 2 - 2, wheelWidth, wheelHeight);
+    ctx.fillRect(staticCar.width / 4, staticCar.height / 2 - wheelHeight + 2, wheelWidth, wheelHeight);
+    ctx.fillRect(-staticCar.width / 3, -staticCar.height / 2 - 2, wheelWidth, wheelHeight);
+    ctx.fillRect(-staticCar.width / 3, staticCar.height / 2 - wheelHeight + 2, wheelWidth, wheelHeight);
 
     ctx.restore();
 }
@@ -361,6 +417,7 @@ function gameLoop(timestamp) {
 
     // Render
     drawTrack();
+    drawStaticCar();
     drawCar();
     updateHUD();
 
