@@ -201,18 +201,10 @@ function updateCar() {
 
     // Check collision
     if (checkCollision()) {
-        // Revert position and bounce back strongly
+        // Revert position and bounce back
         car.x = oldX;
         car.y = oldY;
-        car.speed *= -0.7; // Strong bounce back onto track
-
-        // Push car back towards track center
-        const dx = car.x - track.centerX;
-        const dy = car.y - track.centerY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const pushForce = 8;
-        car.x -= (dx / dist) * pushForce;
-        car.y -= (dy / dist) * pushForce;
+        car.speed *= -0.6; // Reverse speed for bounce effect
     }
 }
 
