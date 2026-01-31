@@ -5,7 +5,7 @@
 }
 
 body {
-    background-color: #000000;
+    background-color: #1a1a2e;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -22,21 +22,21 @@ body {
 }
 
 #gameCanvas {
-    border: 3px solid #ffffff;
+    border: 3px solid #4a4a6a;
     border-radius: 8px;
-    box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 30px rgba(100, 100, 255, 0.3);
 }
 
 #hud {
     position: absolute;
     top: 15px;
     left: 15px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.7);
     padding: 15px 20px;
     border-radius: 8px;
     color: #fff;
     font-size: 16px;
-    border: 1px solid #ffffff;
+    border: 1px solid #4a4a6a;
 }
 
 .hud-item {
@@ -48,29 +48,29 @@ body {
 }
 
 .label {
-    color: #888888;
+    color: #8888aa;
     margin-right: 8px;
 }
 
 #lap-count {
-    color: #ffffff;
+    color: #ffcc00;
     font-weight: bold;
 }
 
 #lap-time {
-    color: #cccccc;
+    color: #00ff88;
     font-family: 'Courier New', monospace;
     font-weight: bold;
 }
 
 #best-time {
-    color: #aaaaaa;
+    color: #ff66aa;
     font-family: 'Courier New', monospace;
     font-weight: bold;
 }
 
 #speed {
-    color: #ffffff;
+    color: #66ccff;
     font-weight: bold;
 }
 
@@ -79,12 +79,12 @@ body {
     bottom: 15px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.7);
     padding: 10px 20px;
     border-radius: 8px;
-    color: #aaaaaa;
+    color: #aaa;
     font-size: 14px;
-    border: 1px solid #ffffff;
+    border: 1px solid #4a4a6a;
 }
 
 #message {
@@ -92,13 +92,13 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.85);
     padding: 20px 40px;
     border-radius: 12px;
     color: #fff;
     font-size: 24px;
     font-weight: bold;
-    border: 2px solid #ffffff;
+    border: 2px solid #ffcc00;
     text-align: center;
 }
 
@@ -107,7 +107,7 @@ body {
 }
 
 #message .new-record {
-    color: #cccccc;
+    color: #ff66aa;
     font-size: 18px;
     margin-top: 10px;
 }
