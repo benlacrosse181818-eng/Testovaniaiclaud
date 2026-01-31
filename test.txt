@@ -1,0 +1,3 @@
+Ahoj! Toto je testovací soubor.
+Vytvořeno pomocí Cursor AI.
+GitHub push test – 31. ledna 2025.
