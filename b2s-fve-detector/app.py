@@ -4,7 +4,7 @@ import uuid
 import shutil
 from pathlib import Path
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 import anthropic
@@ -54,6 +54,16 @@ def encode_image(file_path: Path) -> tuple[str, str]:
     media_type = media_types.get(suffix, "image/jpeg")
     data = base64.standard_b64encode(file_path.read_bytes()).decode("utf-8")
     return data, media_type
+
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    return jsonify({"error": "Soubor je příliš velký. Maximum je 20 MB."}), 413
 
 
 @app.route("/health", methods=["GET"])

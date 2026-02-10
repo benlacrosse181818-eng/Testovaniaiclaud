@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="cs" data-theme="corporate">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B2S FVE Detector</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .drop-zone.dragover {
+            border-color: oklch(var(--p));
+            background-color: oklch(var(--p) / 0.05);
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .analysis-content h1, .analysis-content h2, .analysis-content h3 {
+            font-weight: 700;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .analysis-content h1 { font-size: 1.25rem; }
+        .analysis-content h2 { font-size: 1.125rem; }
+        .analysis-content h3 { font-size: 1rem; }
+        .analysis-content ul, .analysis-content ol {
+            margin-left: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .analysis-content ul { list-style-type: disc; }
+        .analysis-content ol { list-style-type: decimal; }
+        .analysis-content p { margin-bottom: 0.5rem; }
+        .analysis-content strong { font-weight: 700; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-base-200">
+
+    <!-- Navbar -->
+    <div class="navbar bg-base-100 shadow-md">
+        <div class="flex-1">
+            <a class="btn btn-ghost text-xl font-bold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                B2S FVE Detector
+            </a>
+        </div>
+        <div class="flex-none">
+            <div id="health-indicator" class="flex items-center gap-2 text-sm">
+                <span class="loading loading-ring loading-xs"></span>
+                <span class="text-base-content/60">Kontroluji server...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <main class="flex-1 flex items-center justify-center p-4 md:p-8">
+        <div class="w-full max-w-2xl">
+
+            <!-- UPLOAD STATE -->
+            <div data-state="upload" class="fade-in">
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl md:text-4xl font-bold mb-3">Analýza FVE panelů</h1>
+                    <p class="text-base-content/70 text-lg">Nahrajte termální snímek a AI identifikuje závady na fotovoltaických panelech</p>
+                </div>
+
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <!-- Drop zone -->
+                        <div id="drop-zone" class="drop-zone border-2 border-dashed border-base-300 rounded-xl p-10 text-center cursor-pointer hover:border-primary transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <p class="text-lg font-medium mb-1">Přetáhněte snímek sem</p>
+                            <p class="text-sm text-base-content/60">nebo klikněte pro výběr souboru</p>
+                            <p class="text-xs text-base-content/40 mt-2">PNG, JPG, TIFF, BMP, WebP — max 20 MB</p>
+                        </div>
+                        <input type="file" id="file-input" accept=".png,.jpg,.jpeg,.tiff,.tif,.bmp,.webp" class="hidden">
+
+                        <!-- Preview -->
+                        <div id="preview-section" class="hidden mt-4">
+                            <div class="flex items-center gap-4 p-4 bg-base-200 rounded-xl">
+                                <img id="preview-img" class="w-24 h-24 object-cover rounded-lg" alt="Náhled">
+                                <div class="flex-1 min-w-0">
+                                    <p id="file-name" class="font-medium truncate"></p>
+                                    <p id="file-size" class="text-sm text-base-content/60"></p>
+                                </div>
+                                <button id="remove-file" class="btn btn-ghost btn-sm btn-circle">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Analyze button -->
+                        <button id="analyze-btn" class="btn btn-primary btn-lg mt-4 w-full" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            Analyzovat snímek
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LOADING STATE -->
+            <div data-state="loading" class="hidden fade-in">
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body items-center text-center py-16">
+                        <span class="loading loading-spinner loading-lg text-primary"></span>
+                        <h2 class="text-xl font-bold mt-4">Analyzuji snímek...</h2>
+                        <p class="text-base-content/60 mt-1">Claude Vision AI zpracovává termální data</p>
+                        <progress class="progress progress-primary w-64 mt-6" id="progress-bar"></progress>
+                        <p class="text-sm text-base-content/40 mt-2" id="loading-status">Odesílám snímek...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESULTS STATE -->
+            <div data-state="results" class="hidden fade-in">
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title text-xl mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Výsledky analýzy
+                        </h2>
+
+                        <!-- Image preview -->
+                        <div class="mb-4">
+                            <img id="result-img" class="w-full max-h-64 object-contain rounded-lg bg-base-200" alt="Analyzovaný snímek">
+                        </div>
+
+                        <!-- Analysis text -->
+                        <div class="divider">Analýza</div>
+                        <div id="analysis-text" class="analysis-content prose max-w-none"></div>
+
+                        <!-- Stats -->
+                        <div class="divider">Statistiky</div>
+                        <div class="stats stats-vertical md:stats-horizontal shadow w-full">
+                            <div class="stat">
+                                <div class="stat-title">Model</div>
+                                <div class="stat-value text-sm" id="stat-model">-</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-title">Vstupní tokeny</div>
+                                <div class="stat-value text-sm" id="stat-input">-</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-title">Výstupní tokeny</div>
+                                <div class="stat-value text-sm" id="stat-output">-</div>
+                            </div>
+                        </div>
+
+                        <!-- New analysis button -->
+                        <button id="new-analysis-btn" class="btn btn-primary btn-lg mt-6 w-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Nová analýza
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ERROR STATE -->
+            <div data-state="error" class="hidden fade-in">
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body items-center text-center py-12">
+                        <div class="alert alert-error max-w-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span id="error-message">Došlo k chybě.</span>
+                        </div>
+                        <button id="retry-btn" class="btn btn-primary mt-6">
+                            Zkusit znovu
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer footer-center p-4 bg-base-100 text-base-content/60 text-sm">
+        <p>B2S FVE Detector &mdash; Analýza fotovoltaických panelů pomocí AI</p>
+    </footer>
+
+    <script>
+    (function() {
+        // Elements
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const previewSection = document.getElementById('preview-section');
+        const previewImg = document.getElementById('preview-img');
+        const fileName = document.getElementById('file-name');
+        const fileSize = document.getElementById('file-size');
+        const removeFileBtn = document.getElementById('remove-file');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const newAnalysisBtn = document.getElementById('new-analysis-btn');
+        const retryBtn = document.getElementById('retry-btn');
+        const healthIndicator = document.getElementById('health-indicator');
+        const progressBar = document.getElementById('progress-bar');
+        const loadingStatus = document.getElementById('loading-status');
+
+        const ALLOWED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'tiff', 'tif', 'bmp', 'webp'];
+        const MAX_SIZE = 20 * 1024 * 1024; // 20 MB
+
+        let selectedFile = null;
+        let previewDataUrl = null;
+
+        // --- State management ---
+        function showState(state) {
+            document.querySelectorAll('[data-state]').forEach(el => {
+                el.classList.add('hidden');
+                el.classList.remove('fade-in');
+            });
+            const target = document.querySelector(`[data-state="${state}"]`);
+            if (target) {
+                target.classList.remove('hidden');
+                // Trigger reflow for animation
+                void target.offsetWidth;
+                target.classList.add('fade-in');
+            }
+        }
+
+        // --- File validation ---
+        function validateFile(file) {
+            if (!file) return 'Nebyl vybrán žádný soubor.';
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (!ALLOWED_EXTENSIONS.includes(ext)) {
+                return `Nepodporovaný formát (.${ext}). Povolené: ${ALLOWED_EXTENSIONS.join(', ')}`;
+            }
+            if (file.size > MAX_SIZE) {
+                return `Soubor je příliš velký (${formatSize(file.size)}). Maximum je 20 MB.`;
+            }
+            return null;
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // --- File selection ---
+        function handleFile(file) {
+            const error = validateFile(file);
+            if (error) {
+                showState('error');
+                document.getElementById('error-message').textContent = error;
+                return;
+            }
+
+            selectedFile = file;
+            fileName.textContent = file.name;
+            fileSize.textContent = formatSize(file.size);
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewDataUrl = e.target.result;
+                previewImg.src = previewDataUrl;
+                previewSection.classList.remove('hidden');
+                analyzeBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearFile() {
+            selectedFile = null;
+            previewDataUrl = null;
+            fileInput.value = '';
+            previewSection.classList.add('hidden');
+            analyzeBtn.disabled = true;
+        }
+
+        // --- Drag & drop ---
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                handleFile(fileInput.files[0]);
+            }
+        });
+
+        removeFileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            clearFile();
+        });
+
+        // --- Analysis ---
+        async function runAnalysis() {
+            if (!selectedFile) return;
+
+            showState('loading');
+            progressBar.removeAttribute('value');
+            loadingStatus.textContent = 'Odesílám snímek...';
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                loadingStatus.textContent = 'AI analyzuje termální data...';
+
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || `Chyba serveru (${response.status})`);
+                }
+
+                // Show results
+                document.getElementById('result-img').src = previewDataUrl;
+                document.getElementById('analysis-text').innerHTML = formatAnalysis(data.analysis);
+                document.getElementById('stat-model').textContent = data.model || '-';
+                document.getElementById('stat-input').textContent = data.usage ? data.usage.input_tokens.toLocaleString('cs-CZ') : '-';
+                document.getElementById('stat-output').textContent = data.usage ? data.usage.output_tokens.toLocaleString('cs-CZ') : '-';
+
+                showState('results');
+
+            } catch (err) {
+                document.getElementById('error-message').textContent = err.message || 'Neočekávaná chyba při analýze.';
+                showState('error');
+            }
+        }
+
+        analyzeBtn.addEventListener('click', runAnalysis);
+
+        // --- Format analysis text (simple markdown → HTML) ---
+        function formatAnalysis(text) {
+            if (!text) return '<p class="text-base-content/60">Žádná data.</p>';
+
+            let html = text
+                // Escape HTML
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                // Headers
+                .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+                .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+                .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+                // Bold
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                // Italic
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                // Severity badges
+                .replace(/kritická/gi, '<span class="badge badge-error badge-sm">kritická</span>')
+                .replace(/vysoká/gi, '<span class="badge badge-warning badge-sm">vysoká</span>')
+                .replace(/střední/gi, '<span class="badge badge-info badge-sm">střední</span>')
+                .replace(/nízká/gi, '<span class="badge badge-success badge-sm">nízká</span>');
+
+            // Process lines for lists and paragraphs
+            const lines = html.split('\n');
+            let result = '';
+            let inUl = false;
+            let inOl = false;
+
+            for (const line of lines) {
+                const trimmed = line.trim();
+
+                // Unordered list
+                if (/^[-*] /.test(trimmed)) {
+                    if (!inUl) { result += '<ul>'; inUl = true; }
+                    if (inOl) { result += '</ol>'; inOl = false; }
+                    result += '<li>' + trimmed.replace(/^[-*] /, '') + '</li>';
+                    continue;
+                }
+
+                // Ordered list
+                if (/^\d+\.\s/.test(trimmed)) {
+                    if (!inOl) { result += '<ol>'; inOl = true; }
+                    if (inUl) { result += '</ul>'; inUl = false; }
+                    result += '<li>' + trimmed.replace(/^\d+\.\s/, '') + '</li>';
+                    continue;
+                }
+
+                // Close open lists
+                if (inUl) { result += '</ul>'; inUl = false; }
+                if (inOl) { result += '</ol>'; inOl = false; }
+
+                // Skip empty lines between elements
+                if (trimmed === '') {
+                    continue;
+                }
+
+                // Headers or paragraphs
+                if (trimmed.startsWith('<h')) {
+                    result += trimmed;
+                } else {
+                    result += '<p>' + trimmed + '</p>';
+                }
+            }
+
+            // Close any remaining open lists
+            if (inUl) result += '</ul>';
+            if (inOl) result += '</ol>';
+
+            return result;
+        }
+
+        // --- Navigation ---
+        newAnalysisBtn.addEventListener('click', () => {
+            clearFile();
+            showState('upload');
+        });
+
+        retryBtn.addEventListener('click', () => {
+            if (selectedFile) {
+                runAnalysis();
+            } else {
+                clearFile();
+                showState('upload');
+            }
+        });
+
+        // --- Health check ---
+        async function checkHealth() {
+            try {
+                const res = await fetch('/health');
+                if (res.ok) {
+                    healthIndicator.innerHTML = `
+                        <span class="w-2.5 h-2.5 rounded-full bg-success inline-block"></span>
+                        <span class="text-success font-medium">Online</span>`;
+                } else {
+                    throw new Error();
+                }
+            } catch {
+                healthIndicator.innerHTML = `
+                    <span class="w-2.5 h-2.5 rounded-full bg-error inline-block"></span>
+                    <span class="text-error font-medium">Offline</span>`;
+            }
+        }
+
+        checkHealth();
+        setInterval(checkHealth, 30000);
+
+        // Init
+        showState('upload');
+    })();
+    </script>
+</body>
+</html>
