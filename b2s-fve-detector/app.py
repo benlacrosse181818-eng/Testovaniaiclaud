@@ -7,7 +7,7 @@ from pathlib import Path
 from flask import Flask, request, jsonify, render_template
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
-import anthropic
+anthropic = None
 
 load_dotenv()
 
@@ -96,9 +96,11 @@ def analyze():
     file.save(file_path)
 
     try:
+        import anthropic as _anthropic
+
         image_data, media_type = encode_image(file_path)
 
-        client = anthropic.Anthropic(api_key=api_key)
+        client = _anthropic.Anthropic(api_key=api_key)
         message = client.messages.create(
             model=ANTHROPIC_MODEL,
             max_tokens=2048,
@@ -136,7 +138,7 @@ def analyze():
             },
         })
 
-    except anthropic.APIError as e:
+    except _anthropic.APIError as e:
         return jsonify({"error": f"Chyba Anthropic API: {e.message}"}), 502
 
     finally:
